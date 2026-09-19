@@ -20,10 +20,7 @@ Unzip this package and copy **all** of its contents into that repository. Keep t
 kagrawal6/
 ├── .github/workflows/update-profile.yml
 ├── assets/
-│   ├── activity.svg
-│   ├── header.svg
-│   ├── languages.svg
-│   └── telemetry.svg
+│   └── languages.svg
 ├── scripts/generate_stats.py
 ├── profile-config.json
 ├── README.md
@@ -59,7 +56,7 @@ Open:
 Actions → Update profile dashboard → Run workflow
 ```
 
-The included graphics initially say `SYNC PENDING`. The first successful run replaces them with your real public-repository statistics. The workflow then refreshes them every day at 05:17 UTC.
+The included graphic initially says `SYNC PENDING`. The first successful run replaces it with your real public-repository language statistics. The workflow then refreshes them every day at 05:17 UTC.
 
 ## Optional: include private repositories
 
@@ -74,7 +71,7 @@ Never place a token directly in the repository.
 
 ## Customize the dashboard
 
-Edit `profile-config.json` to change the title, institution line, accent color, or exclusions. To omit a repository from all calculations:
+Edit `profile-config.json` to change the accent color or exclusions. To omit a repository from the language totals:
 
 ```json
 "exclude_repositories": ["repo-name", "another-repo"]
@@ -82,14 +79,9 @@ Edit `profile-config.json` to change the title, institution line, accent color, 
 
 Commit the change and rerun the workflow.
 
-## What each number means
+## What the numbers mean
 
-- **Lifetime commits**: commit contributions reported by GitHub from account creation through today. GitHub generally counts commits to a repository's default branch or `gh-pages` branch.
-- **Source lines**: current nonblank, non-comment lines in recognized source files across indexed owned repositories—not every line ever typed.
-- **Public repos**: the public repository count reported by GitHub.
-- **Stars earned**: stars currently held by indexed owned repositories.
-- **This year**: all contribution types reported by GitHub for the current calendar year.
-- **Languages**: distinct recognized languages in the indexed source tree.
+- **Language shares**: current nonblank, non-comment source-line shares across indexed owned repositories after the exclusions in `profile-config.json`.
 - **Profile views**: supplied by the third-party Komarev counter in `README.md`; it starts counting after the image is published and is not retroactive.
 
 ## Run it locally
@@ -101,7 +93,7 @@ export GITHUB_TOKEN="your-token"
 python scripts/generate_stats.py
 ```
 
-Use `PROFILE_TOKEN` instead when you intentionally want private-repository access. To regenerate the clean placeholder assets without network access:
+Use `PROFILE_TOKEN` instead when you intentionally want private-repository access. To regenerate the clean placeholder asset without network access:
 
 ```bash
 python scripts/generate_stats.py --placeholder
