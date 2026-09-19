@@ -1,0 +1,30 @@
+{
+  "username": "kagrawal6",
+  "name": "Kushal Agrawal",
+  "headline": "COMPUTER ARCHITECTURE  /  SYSTEMS SOFTWARE  /  AI INFRASTRUCTURE",
+  "institution": "M.S. COMPUTER ENGINEERING  ·  CARNEGIE MELLON UNIVERSITY",
+  "website": "https://kushalagrawal.net/",
+  "linkedin": "https://www.linkedin.com/in/kushalagrawal0/",
+  "accent": "#6EE7F2",
+  "exclude_forks": true,
+  "exclude_archived": true,
+  "exclude_repositories": [],
+  "exclude_globs": [
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.next/**",
+    "**/coverage/**",
+    "**/generated/**",
+    "**/third_party/**",
+    "**/third-party/**",
+    "**/external/**",
+    "**/*.min.js",
+    "**/*.min.css",
+    "**/*.lock",
+    "**/package-lock.json",
+    "**/yarn.lock",
+    "**/pnpm-lock.yaml"
+  ]
+}
