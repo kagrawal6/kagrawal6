@@ -27,41 +27,41 @@
   <path d="M0 0H344V76H0Z" fill="#0E1C2A" stroke="#233547"/>
   <path d="M0 0H5V76H0Z" fill="#6EE7F2" opacity="0.95"/>
   <text x="24" y="30" class="mono muted" font-size="11" font-weight="700" letter-spacing="1.6">LIFETIME COMMITS</text>
-  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">—</text>
+  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">184</text>
 </g>
 <g transform="translate(436 102)">
   <path d="M0 0H344L354 10V86H10L0 76Z" fill="#050B12" opacity=".68"/>
   <path d="M0 0H344V76H0Z" fill="#0E1C2A" stroke="#233547"/>
   <path d="M0 0H5V76H0Z" fill="#6EE7F2" opacity="0.87"/>
   <text x="24" y="30" class="mono muted" font-size="11" font-weight="700" letter-spacing="1.6">SOURCE LINES</text>
-  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">—</text>
+  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">2.9M</text>
 </g>
 <g transform="translate(818 102)">
   <path d="M0 0H344L354 10V86H10L0 76Z" fill="#050B12" opacity=".68"/>
   <path d="M0 0H344V76H0Z" fill="#0E1C2A" stroke="#233547"/>
   <path d="M0 0H5V76H0Z" fill="#6EE7F2" opacity="0.79"/>
   <text x="24" y="30" class="mono muted" font-size="11" font-weight="700" letter-spacing="1.6">PUBLIC REPOS</text>
-  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">—</text>
+  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">19</text>
 </g>
 <g transform="translate(54 214)">
   <path d="M0 0H344L354 10V86H10L0 76Z" fill="#050B12" opacity=".68"/>
   <path d="M0 0H344V76H0Z" fill="#0E1C2A" stroke="#233547"/>
   <path d="M0 0H5V76H0Z" fill="#6EE7F2" opacity="0.71"/>
   <text x="24" y="30" class="mono muted" font-size="11" font-weight="700" letter-spacing="1.6">STARS EARNED</text>
-  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">—</text>
+  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">8</text>
 </g>
 <g transform="translate(436 214)">
   <path d="M0 0H344L354 10V86H10L0 76Z" fill="#050B12" opacity=".68"/>
   <path d="M0 0H344V76H0Z" fill="#0E1C2A" stroke="#233547"/>
   <path d="M0 0H5V76H0Z" fill="#6EE7F2" opacity="0.63"/>
   <text x="24" y="30" class="mono muted" font-size="11" font-weight="700" letter-spacing="1.6">THIS YEAR</text>
-  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">—</text>
+  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">212</text>
 </g>
 <g transform="translate(818 214)">
   <path d="M0 0H344L354 10V86H10L0 76Z" fill="#050B12" opacity=".68"/>
   <path d="M0 0H344V76H0Z" fill="#0E1C2A" stroke="#233547"/>
   <path d="M0 0H5V76H0Z" fill="#6EE7F2" opacity="0.55"/>
   <text x="24" y="30" class="mono muted" font-size="11" font-weight="700" letter-spacing="1.6">LANGUAGES</text>
-  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">—</text>
+  <text x="24" y="60" class="sans" fill="#EAF2F8" font-size="27" font-weight="700">15</text>
 </g>
 </svg>

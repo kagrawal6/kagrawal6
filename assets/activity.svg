@@ -24,47 +24,47 @@
 <path d="M82 309H1120" stroke="#233547"/><path d="M82 309l22-15h1038" stroke="#233547" opacity=".45"/>
 
 <g>
-  <path d="M112 275l14-10h70l-14 10z" fill="#6EE7F2" opacity=".9"/>
-  <path d="M182 275l14-10v34l-14 10z" fill="#6EE7F2" opacity=".36"/>
-  <rect x="112" y="275" width="70" height="34" fill="#6EE7F2" opacity=".7"/>
+  <path d="M112 301l14-10h70l-14 10z" fill="#6EE7F2" opacity=".9"/>
+  <path d="M182 301l14-10v8l-14 10z" fill="#6EE7F2" opacity=".36"/>
+  <rect x="112" y="301" width="70" height="8" fill="#6EE7F2" opacity=".7"/>
   <text x="147" y="340" class="mono muted" font-size="11" text-anchor="middle">2021</text>
-  <text x="147" y="257" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">—</text>
+  <text x="147" y="283" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">0</text>
 </g>
 <g>
-  <path d="M288 275l14-10h70l-14 10z" fill="#8B9FFF" opacity=".9"/>
-  <path d="M358 275l14-10v34l-14 10z" fill="#8B9FFF" opacity=".36"/>
-  <rect x="288" y="275" width="70" height="34" fill="#8B9FFF" opacity=".7"/>
+  <path d="M288 301l14-10h70l-14 10z" fill="#8B9FFF" opacity=".9"/>
+  <path d="M358 301l14-10v8l-14 10z" fill="#8B9FFF" opacity=".36"/>
+  <rect x="288" y="301" width="70" height="8" fill="#8B9FFF" opacity=".7"/>
   <text x="323" y="340" class="mono muted" font-size="11" text-anchor="middle">2022</text>
-  <text x="323" y="257" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">—</text>
+  <text x="323" y="283" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">0</text>
 </g>
 <g>
-  <path d="M464 275l14-10h70l-14 10z" fill="#B08CFF" opacity=".9"/>
-  <path d="M534 275l14-10v34l-14 10z" fill="#B08CFF" opacity=".36"/>
-  <rect x="464" y="275" width="70" height="34" fill="#B08CFF" opacity=".7"/>
+  <path d="M464 301l14-10h70l-14 10z" fill="#B08CFF" opacity=".9"/>
+  <path d="M534 301l14-10v8l-14 10z" fill="#B08CFF" opacity=".36"/>
+  <rect x="464" y="301" width="70" height="8" fill="#B08CFF" opacity=".7"/>
   <text x="499" y="340" class="mono muted" font-size="11" text-anchor="middle">2023</text>
-  <text x="499" y="257" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">—</text>
+  <text x="499" y="283" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">0</text>
 </g>
 <g>
-  <path d="M640 275l14-10h70l-14 10z" fill="#5DC7A1" opacity=".9"/>
-  <path d="M710 275l14-10v34l-14 10z" fill="#5DC7A1" opacity=".36"/>
-  <rect x="640" y="275" width="70" height="34" fill="#5DC7A1" opacity=".7"/>
+  <path d="M640 301l14-10h70l-14 10z" fill="#5DC7A1" opacity=".9"/>
+  <path d="M710 301l14-10v8l-14 10z" fill="#5DC7A1" opacity=".36"/>
+  <rect x="640" y="301" width="70" height="8" fill="#5DC7A1" opacity=".7"/>
   <text x="675" y="340" class="mono muted" font-size="11" text-anchor="middle">2024</text>
-  <text x="675" y="257" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">—</text>
+  <text x="675" y="283" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">6</text>
 </g>
 <g>
-  <path d="M816 275l14-10h70l-14 10z" fill="#6EE7F2" opacity=".9"/>
-  <path d="M886 275l14-10v34l-14 10z" fill="#6EE7F2" opacity=".36"/>
-  <rect x="816" y="275" width="70" height="34" fill="#6EE7F2" opacity=".7"/>
+  <path d="M816 126l14-10h70l-14 10z" fill="#6EE7F2" opacity=".9"/>
+  <path d="M886 126l14-10v183l-14 10z" fill="#6EE7F2" opacity=".36"/>
+  <rect x="816" y="126" width="70" height="183" fill="#6EE7F2" opacity=".7"/>
   <text x="851" y="340" class="mono muted" font-size="11" text-anchor="middle">2025</text>
-  <text x="851" y="257" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">—</text>
+  <text x="851" y="116" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">204</text>
 </g>
 <g>
-  <path d="M992 275l14-10h70l-14 10z" fill="#8B9FFF" opacity=".9"/>
-  <path d="M1062 275l14-10v34l-14 10z" fill="#8B9FFF" opacity=".36"/>
-  <rect x="992" y="275" width="70" height="34" fill="#8B9FFF" opacity=".7"/>
+  <path d="M992 119l14-10h70l-14 10z" fill="#8B9FFF" opacity=".9"/>
+  <path d="M1062 119l14-10v190l-14 10z" fill="#8B9FFF" opacity=".36"/>
+  <rect x="992" y="119" width="70" height="190" fill="#8B9FFF" opacity=".7"/>
   <text x="1027" y="340" class="mono muted" font-size="11" text-anchor="middle">2026</text>
-  <text x="1027" y="257" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">—</text>
+  <text x="1027" y="116" class="mono" fill="#EAF2F8" font-size="12" font-weight="700" text-anchor="middle">212</text>
 </g>
-<polyline points="147,265 323,265 499,265 675,265 851,265 1027,265" fill="none" stroke="#6EE7F2" stroke-width="2" stroke-linejoin="round" opacity=".8"/>
-<circle cx="147" cy="265" r="3.5" fill="#6EE7F2"/><circle cx="323" cy="265" r="3.5" fill="#6EE7F2"/><circle cx="499" cy="265" r="3.5" fill="#6EE7F2"/><circle cx="675" cy="265" r="3.5" fill="#6EE7F2"/><circle cx="851" cy="265" r="3.5" fill="#6EE7F2"/><circle cx="1027" cy="265" r="3.5" fill="#6EE7F2"/>
+<polyline points="147,291 323,291 499,291 675,291 851,116 1027,109" fill="none" stroke="#6EE7F2" stroke-width="2" stroke-linejoin="round" opacity=".8"/>
+<circle cx="147" cy="291" r="3.5" fill="#6EE7F2"/><circle cx="323" cy="291" r="3.5" fill="#6EE7F2"/><circle cx="499" cy="291" r="3.5" fill="#6EE7F2"/><circle cx="675" cy="291" r="3.5" fill="#6EE7F2"/><circle cx="851" cy="116" r="3.5" fill="#6EE7F2"/><circle cx="1027" cy="109" r="3.5" fill="#6EE7F2"/>
 </svg>
