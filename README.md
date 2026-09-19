@@ -1,4 +1,4 @@
-Hi, I'm Kushal, a Computer Engineering student at Carnegie Mellon University. I work at the intersection of computer architecture and systems software. I am driven by the idea of building the underlying tools and infrastructure that allow future technologies to scale.
+Hi, I'm Kushal, a Computer Engineering student at Carnegie Mellon University. I work at the intersection of computer architecture and systems software. I am driven to build the underlying tools and infrastructure that allow future technologies to scale.
 
 <p align="center">
   <img src="./assets/languages.svg?v=20260919080022" width="100%" alt="Current language mix across owned repositories" />
