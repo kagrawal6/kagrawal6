@@ -18,6 +18,7 @@ import fnmatch
 import json
 import math
 import os
+import re
 import subprocess
 import tempfile
 import urllib.error
@@ -25,6 +26,7 @@ import urllib.parse
 import urllib.request
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape
@@ -379,9 +381,24 @@ def render_languages(stats: ProfileStats | None) -> str:
 </svg>'''
 
 
+def bust_readme_cache() -> None:
+    readme = ROOT / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    updated, count = re.subn(
+        r'(src="\./assets/languages\.svg)(?:\?[^"]*)?(")',
+        rf"\1?v={stamp}\2",
+        text,
+        count=1,
+    )
+    if count:
+        readme.write_text(updated, encoding="utf-8")
+
+
 def write_assets(stats: ProfileStats | None) -> None:
     ASSETS.mkdir(parents=True, exist_ok=True)
     (ASSETS / "languages.svg").write_text(render_languages(stats) + "\n", encoding="utf-8")
+    bust_readme_cache()
 
 
 def collect(config: dict[str, Any]) -> ProfileStats:
