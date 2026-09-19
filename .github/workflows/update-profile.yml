@@ -3,7 +3,7 @@ name: Update profile dashboard
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 5 * * *"
+    - cron: "17 */12 * * *"
 
 permissions:
   contents: write

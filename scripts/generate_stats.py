@@ -12,7 +12,6 @@ import argparse
 import base64
 import fnmatch
 import json
-import math
 import os
 import subprocess
 import tempfile
@@ -46,11 +45,38 @@ EXTENSIONS = {
     ".scala": "Scala", ".lua": "Lua", ".r": "R", ".m": "MATLAB/Obj-C",
 }
 
-PALETTE = ["#6EE7F2", "#8B9FFF", "#B08CFF", "#5DC7A1", "#F0B86E", "#F17C8D", "#6F809B"]
-BG = "#071019"
-LINE = "#233547"
-TEXT = "#EAF2F8"
-MUTED = "#8495A7"
+# GitHub Linguist colors, so the chart reads like a repo language bar.
+LANGUAGE_COLORS = {
+    "Assembly": "#6E4C13",
+    "C": "#555555",
+    "C#": "#178600",
+    "C++": "#f34b7d",
+    "CSS": "#563d7c",
+    "CUDA": "#3A4E3A",
+    "Go": "#00ADD8",
+    "HTML": "#e34c26",
+    "Java": "#b07219",
+    "JavaScript": "#f1e05a",
+    "Jupyter": "#DA5B0B",
+    "Kotlin": "#A97BFF",
+    "Lua": "#000080",
+    "MATLAB/Obj-C": "#e16737",
+    "PHP": "#4F5D95",
+    "Python": "#3572A5",
+    "R": "#198CE7",
+    "Ruby": "#701516",
+    "Rust": "#dea584",
+    "SQL": "#e38c00",
+    "Scala": "#c22d40",
+    "Shell": "#89e051",
+    "Swift": "#F05138",
+    "SystemVerilog": "#DAE1C2",
+    "Tcl": "#e4cc98",
+    "TypeScript": "#3178c6",
+    "VHDL": "#adb2cb",
+    "Verilog": "#b2b7f8",
+    "Other": "#8b949e",
+}
 
 
 def load_config() -> dict[str, Any]:
@@ -183,41 +209,8 @@ def compact_number(value: int | None) -> str:
     return f"{value:,}"
 
 
-def svg_shell(width: int, height: int, body: str, accent: str, title: str) -> str:
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">
-<title id="title">{escape(title)}</title>
-<desc id="desc">Generated GitHub profile analytics for Kushal Agrawal.</desc>
-<defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071019"/><stop offset="1" stop-color="#0B1622"/></linearGradient>
-  <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0"><stop stop-color="{accent}"/><stop offset="1" stop-color="#8B9FFF"/></linearGradient>
-  <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#294055" stroke-opacity=".16"/></pattern>
-  <style>
-    .sans{{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
-    .mono{{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}}
-    .title{{fill:{TEXT};font-size:24px;font-weight:650;letter-spacing:1.2px}}
-    .eyebrow{{fill:{accent};font-size:12px;font-weight:700;letter-spacing:3px}}
-    .muted{{fill:{MUTED}}}
-  </style>
-</defs>
-<rect width="{width}" height="{height}" rx="24" fill="url(#bg)"/>
-<rect width="{width}" height="{height}" rx="24" fill="url(#grid)"/>
-<rect x=".5" y=".5" width="{width-1}" height="{height-1}" rx="23.5" fill="none" stroke="#26394B"/>
-{body}
-</svg>'''
-
-
-def polar(cx: float, cy: float, radius: float, angle: float) -> tuple[float, float]:
-    radians = math.radians(angle - 90)
-    return cx + radius * math.cos(radians), cy + radius * math.sin(radians)
-
-
-def donut_path(cx: float, cy: float, outer: float, inner: float, start: float, end: float) -> str:
-    x1, y1 = polar(cx, cy, outer, start)
-    x2, y2 = polar(cx, cy, outer, end)
-    x3, y3 = polar(cx, cy, inner, end)
-    x4, y4 = polar(cx, cy, inner, start)
-    large = 1 if end - start > 180 else 0
-    return f"M{x1:.2f},{y1:.2f} A{outer},{outer} 0 {large},1 {x2:.2f},{y2:.2f} L{x3:.2f},{y3:.2f} A{inner},{inner} 0 {large},0 {x4:.2f},{y4:.2f} Z"
+def language_color(name: str) -> str:
+    return LANGUAGE_COLORS.get(name, "#8b949e")
 
 
 def language_slices(counts: Counter[str], limit: int = 6) -> list[tuple[str, int]]:
@@ -228,53 +221,53 @@ def language_slices(counts: Counter[str], limit: int = 6) -> list[tuple[str, int
     return most
 
 
-def render_languages(config: dict[str, Any], counts: Counter[str] | None) -> str:
-    accent = config["accent"]
+def render_languages(_config: dict[str, Any], counts: Counter[str] | None) -> str:
     pending = not counts or sum(counts.values()) == 0
     values = [("Pending", 1)] if pending else language_slices(counts)
     total = sum(value for _, value in values)
-    angle = 0.0
-    arcs = []
+    width, height = 800, 164
+    pad_x, bar_y, bar_h = 28, 58, 8
+    bar_w = width - pad_x * 2
+    segments = []
     legend = []
-    bars = []
-    max_value = max(value for _, value in values)
+    cursor = float(pad_x)
     for index, (name, value) in enumerate(values):
-        color = PALETTE[index % len(PALETTE)]
-        sweep = value / total * 360
-        gap = min(1.5, sweep / 8)
-        arcs.append(f'<path d="{donut_path(260, 294, 126, 82, angle + gap, angle + sweep - gap)}" fill="{color}"/>')
-        angle += sweep
-        pct = value / total * 100
-        ly = 169 + index * 42
-        legend.append(f'<rect x="430" y="{ly-11}" width="10" height="10" rx="2" fill="{color}"/><text x="452" y="{ly}" class="sans" fill="{TEXT}" font-size="14">{escape(name)}</text><text x="622" y="{ly}" class="mono muted" font-size="12" text-anchor="end">{"—" if pending else f"{pct:.1f}%"}</text>')
-        if index < 6:
-            height = 34 if pending else 34 + int(160 * value / max_value)
-            bx = 755 + index * 62
-            by = 405 - height
-            bars.append(f'''
-<g>
-  <path d="M{bx} {by}l10-7h34l-10 7z" fill="{color}" opacity=".92"/>
-  <path d="M{bx+34} {by}l10-7v{height}l-10 7z" fill="{color}" opacity=".42"/>
-  <rect x="{bx}" y="{by}" width="34" height="{height}" fill="{color}" opacity=".72"/>
-  <text x="{bx+17}" y="432" class="mono muted" font-size="10" text-anchor="middle">{escape(name[:5].upper())}</text>
-</g>''')
-    center_text = "SYNC" if pending else compact_number(total)
-    center_sub = "PENDING" if pending else "SOURCE LINES"
-    body = f'''
-<text x="54" y="49" class="eyebrow mono">LANGUAGE DISTRIBUTION</text>
-<text x="54" y="78" class="title sans">Codebase composition</text>
-<text x="1146" y="55" class="mono muted" font-size="11" text-anchor="end">LOC / OWNED REPOSITORIES</text>
-<line x1="678" y1="122" x2="678" y2="447" stroke="{LINE}"/>
-<circle cx="260" cy="294" r="126" fill="#0B1622" stroke="{LINE}"/>
-{''.join(arcs)}
-<circle cx="260" cy="294" r="80" fill="{BG}" stroke="{LINE}"/>
-<text x="260" y="290" class="sans" fill="{TEXT}" font-size="28" font-weight="700" text-anchor="middle">{center_text}</text>
-<text x="260" y="316" class="mono muted" font-size="10" letter-spacing="1.5" text-anchor="middle">{center_sub}</text>
+        color = language_color(name)
+        share = value / total
+        seg_w = bar_w if pending else bar_w * share
+        segments.append(
+            f'<rect x="{cursor:.2f}" y="{bar_y}" width="{seg_w:.2f}" height="{bar_h}" fill="{color}"/>'
+        )
+        cursor += seg_w
+        col, row = index % 4, index // 4
+        lx = pad_x + col * 188
+        ly = 98 + row * 36
+        pct = "—" if pending else f"{share * 100:.1f}%"
+        legend.append(
+            f'<circle cx="{lx + 5}" cy="{ly}" r="4" fill="{color}"/>'
+            f'<text x="{lx + 16}" y="{ly + 4}" class="label">{escape(name)}</text>'
+            f'<text x="{lx + 168}" y="{ly + 4}" class="muted" text-anchor="end">{pct}</text>'
+        )
+    lines = "Updating" if pending else f"{compact_number(total)} lines"
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">
+<title id="title">Languages</title>
+<desc id="desc">Source-line language mix across owned repositories.</desc>
+<style>
+  .title {{ font: 600 16px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #e6edf3; }}
+  .muted {{ font: 12px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #8b949e; }}
+  .label {{ font: 13px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #e6edf3; }}
+</style>
+<defs>
+  <clipPath id="bar"><rect x="{pad_x}" y="{bar_y}" width="{bar_w}" height="{bar_h}" rx="4"/></clipPath>
+</defs>
+<rect width="{width}" height="{height}" rx="6" fill="#0d1117"/>
+<rect x=".5" y=".5" width="{width - 1}" height="{height - 1}" rx="5.5" fill="none" stroke="#30363d"/>
+<text x="{pad_x}" y="34" class="title">Languages</text>
+<text x="{width - pad_x}" y="34" class="muted" text-anchor="end">{escape(lines)}</text>
+<rect x="{pad_x}" y="{bar_y}" width="{bar_w}" height="{bar_h}" rx="4" fill="#21262d"/>
+<g clip-path="url(#bar)">{''.join(segments)}</g>
 {''.join(legend)}
-<text x="755" y="139" class="mono" fill="{accent}" font-size="11" font-weight="700" letter-spacing="1.6">RELATIVE SOURCE FOOTPRINT</text>
-<path d="M735 405H1132" stroke="{LINE}"/><path d="M735 405l20-14h397" stroke="{LINE}" opacity=".55"/>
-{''.join(bars)}'''
-    return svg_shell(1200, 500, body, accent, "Language distribution")
+</svg>'''
 
 
 def write_assets(config: dict[str, Any], counts: Counter[str] | None) -> None:

@@ -56,7 +56,7 @@ Open:
 Actions → Update profile dashboard → Run workflow
 ```
 
-The included graphic initially says `SYNC PENDING`. The first successful run replaces it with your real public-repository language statistics. The workflow then refreshes them every day at 05:17 UTC.
+The included graphic initially says `SYNC PENDING`. The first successful run replaces it with your real public-repository language statistics. The workflow then refreshes them every 12 hours.
 
 ## Optional: include private repositories
 
@@ -71,7 +71,7 @@ Never place a token directly in the repository.
 
 ## Customize the dashboard
 
-Edit `profile-config.json` to change the accent color or exclusions. To omit a repository from the language totals:
+Edit `profile-config.json` to change exclusions. To omit a repository from the language totals:
 
 ```json
 "exclude_repositories": ["repo-name", "another-repo"]
@@ -82,7 +82,6 @@ Commit the change and rerun the workflow.
 ## What the numbers mean
 
 - **Language shares**: current nonblank, non-comment source-line shares across indexed owned repositories after the exclusions in `profile-config.json`.
-- **Profile views**: supplied by the third-party Komarev counter in `README.md`; it starts counting after the image is published and is not retroactive.
 
 ## Run it locally
 
