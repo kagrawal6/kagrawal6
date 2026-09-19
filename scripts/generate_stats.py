@@ -2,8 +2,12 @@
 """Generate the language chart used by the GitHub profile README.
 
 No third-party Python packages are required. Public mode uses GitHub's REST API
-plus shallow clones. Supplying PROFILE_TOKEN allows owned private repositories
-to be included when the token has access to them.
+plus clones. Supplying PROFILE_TOKEN allows owned private repositories to be
+included when the token has access to them.
+
+The headline count is source lines ever committed (insertions across
+history, excluding merge commits). The percentage split is the current
+tree only.
 """
 
 from __future__ import annotations
@@ -12,6 +16,7 @@ import argparse
 import base64
 import fnmatch
 import json
+import math
 import os
 import subprocess
 import tempfile
@@ -19,6 +24,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape
@@ -45,7 +51,6 @@ EXTENSIONS = {
     ".scala": "Scala", ".lua": "Lua", ".r": "R", ".m": "MATLAB/Obj-C",
 }
 
-# GitHub Linguist colors, so the chart reads like a repo language bar.
 LANGUAGE_COLORS = {
     "Assembly": "#6E4C13",
     "C": "#555555",
@@ -66,6 +71,7 @@ LANGUAGE_COLORS = {
     "R": "#198CE7",
     "Ruby": "#701516",
     "Rust": "#dea584",
+    "SCSS": "#c6538c",
     "SQL": "#e38c00",
     "Scala": "#c22d40",
     "Shell": "#89e051",
@@ -75,8 +81,18 @@ LANGUAGE_COLORS = {
     "TypeScript": "#3178c6",
     "VHDL": "#adb2cb",
     "Verilog": "#b2b7f8",
-    "Other": "#8b949e",
 }
+
+HDL_LANGUAGES = {"SystemVerilog", "Verilog", "VHDL"}
+MARKUP_LANGUAGES = {"HTML", "CSS", "SCSS"}
+
+
+@dataclass
+class ProfileStats:
+    current: Counter[str]
+    lifetime_lines: int
+    repo_count: int
+    size_kb: int
 
 
 def load_config() -> dict[str, Any]:
@@ -130,9 +146,21 @@ def is_excluded(path: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(padded, f"/{pattern}") for pattern in patterns)
 
 
+def language_for_path(path: str) -> str | None:
+    return EXTENSIONS.get(Path(path).suffix.lower())
+
+
+def max_file_bytes(language: str) -> int:
+    if language in HDL_LANGUAGES:
+        return 400_000
+    if language in MARKUP_LANGUAGES:
+        return 100_000
+    return 1_000_000
+
+
 def source_line_count(path: Path, language: str) -> int:
     try:
-        if path.stat().st_size > 2_000_000:
+        if path.stat().st_size > max_file_bytes(language):
             return 0
         text = path.read_text(encoding="utf-8", errors="ignore")
     except OSError:
@@ -140,7 +168,7 @@ def source_line_count(path: Path, language: str) -> int:
     line_markers = ("//", "#")
     if language in {"VHDL", "SQL"}:
         line_markers = ("--",)
-    elif language in {"HTML", "CSS", "SCSS"}:
+    elif language in MARKUP_LANGUAGES:
         line_markers = tuple()
     in_block = False
     count = 0
@@ -167,8 +195,58 @@ def source_line_count(path: Path, language: str) -> int:
     return count
 
 
-def clone_and_count(repos: list[dict[str, Any]], token: str, exclude_globs: list[str]) -> Counter[str]:
+def normalize_numstat_path(path: str) -> str:
+    cleaned = path.strip().strip("{}")
+    if " => " in cleaned:
+        cleaned = cleaned.split(" => ", 1)[1]
+    return cleaned.replace("\\", "/")
+
+
+def count_current_tree(repo: Path, exclude_globs: list[str]) -> Counter[str]:
+    tracked = subprocess.run(
+        ["git", "-C", str(repo), "ls-files", "-z"],
+        capture_output=True, check=True, timeout=60,
+    ).stdout.decode("utf-8", errors="replace").split("\0")
     counts: Counter[str] = Counter()
+    for relative in tracked:
+        if not relative or is_excluded(relative, exclude_globs):
+            continue
+        language = language_for_path(relative)
+        if language:
+            counts[language] += source_line_count(repo / relative, language)
+    return counts
+
+
+def count_lifetime_insertions(repo: Path, exclude_globs: list[str]) -> int:
+    result = subprocess.run(
+        ["git", "-C", str(repo), "log", "--all", "--no-merges", "--numstat", "--pretty=tformat:"],
+        capture_output=True, check=True, timeout=180,
+    )
+    total = 0
+    for line in result.stdout.decode("utf-8", errors="replace").splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("\t", 2)
+        if len(parts) != 3 or parts[0] == "-":
+            continue
+        path = normalize_numstat_path(parts[2])
+        if is_excluded(path, exclude_globs) or language_for_path(path) is None:
+            continue
+        total += int(parts[0])
+    return total
+
+
+def git_env(token: str) -> dict[str, str]:
+    env = os.environ.copy()
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    if token:
+        env["GCM_INTERACTIVE"] = "never"
+    return env
+
+
+def analyze_repositories(repos: list[dict[str, Any]], token: str, exclude_globs: list[str]) -> ProfileStats:
+    current: Counter[str] = Counter()
+    lifetime_lines = 0
     basic = base64.b64encode(f"x-access-token:{token}".encode()).decode() if token else ""
     with tempfile.TemporaryDirectory(prefix="profile-stats-") as temp:
         temp_root = Path(temp)
@@ -177,22 +255,22 @@ def clone_and_count(repos: list[dict[str, Any]], token: str, exclude_globs: list
             command = ["git"]
             if token:
                 command += ["-c", f"http.extraHeader=AUTHORIZATION: basic {basic}"]
-            command += ["clone", "--depth=1", "--quiet", repo["clone_url"], str(destination)]
-            result = subprocess.run(command, capture_output=True, text=True, timeout=180)
+            command += ["clone", "--quiet", "--single-branch", repo["clone_url"], str(destination)]
+            result = subprocess.run(command, capture_output=True, text=True, timeout=300, env=git_env(token))
             if result.returncode != 0:
                 print(f"warning: could not clone {repo['full_name']}; skipping LOC analysis")
                 continue
-            tracked = subprocess.run(
-                ["git", "-C", str(destination), "ls-files", "-z"],
-                capture_output=True, check=True,
-            ).stdout.decode("utf-8", errors="replace").split("\0")
-            for relative in tracked:
-                if not relative or is_excluded(relative, exclude_globs):
-                    continue
-                language = EXTENSIONS.get(Path(relative).suffix.lower())
-                if language:
-                    counts[language] += source_line_count(destination / relative, language)
-    return counts
+            head = count_current_tree(destination, exclude_globs)
+            committed = count_lifetime_insertions(destination, exclude_globs)
+            current.update(head)
+            lifetime_lines += committed
+            print(f"{repo['full_name']}: {sum(head.values()):,} current lines, {committed:,} committed")
+    return ProfileStats(
+        current=current,
+        lifetime_lines=lifetime_lines,
+        repo_count=len(repos),
+        size_kb=sum(int(repo.get("size") or 0) for repo in repos),
+    )
 
 
 def compact_number(value: int | None) -> str:
@@ -213,20 +291,44 @@ def language_color(name: str) -> str:
     return LANGUAGE_COLORS.get(name, "#8b949e")
 
 
-def language_slices(counts: Counter[str], limit: int = 6) -> list[tuple[str, int]]:
-    most = counts.most_common(limit)
-    remainder = sum(counts.values()) - sum(value for _, value in most)
-    if remainder:
-        most.append(("Other", remainder))
-    return most
+def language_rows(counts: Counter[str]) -> list[tuple[str, int]]:
+    return [(name, value) for name, value in counts.most_common() if value > 0]
 
 
-def render_languages(_config: dict[str, Any], counts: Counter[str] | None) -> str:
-    pending = not counts or sum(counts.values()) == 0
-    values = [("Pending", 1)] if pending else language_slices(counts)
+def format_storage(size_kb: int) -> str:
+    gigabytes = size_kb / (1024 * 1024)
+    if gigabytes >= 10:
+        return f"{gigabytes:.1f} GB"
+    if gigabytes >= 1:
+        return f"{gigabytes:.2f} GB"
+    megabytes = size_kb / 1024
+    if megabytes >= 10:
+        return f"{megabytes:.0f} MB"
+    if megabytes >= 1:
+        return f"{megabytes:.1f} MB"
+    return f"{size_kb} KB"
+
+
+def format_repo_count(count: int) -> str:
+    return "1 repo" if count == 1 else f"{count} repos"
+
+
+def format_share(share: float) -> str:
+    percent = share * 100
+    if percent < 0.1:
+        return "<0.1%"
+    return f"{percent:.1f}%"
+
+
+def render_languages(stats: ProfileStats | None) -> str:
+    pending = stats is None or not stats.current
+    values = [("Pending", 1)] if pending else language_rows(stats.current)
     total = sum(value for _, value in values)
-    width, height = 800, 164
-    pad_x, bar_y, bar_h = 28, 58, 8
+    columns = 3
+    rows = max(1, math.ceil(len(values) / columns))
+    width, pad_x, bar_y, bar_h = 800, 28, 58, 8
+    col_w = (width - pad_x * 2) / columns
+    height = 88 + rows * 32
     bar_w = width - pad_x * 2
     segments = []
     legend = []
@@ -234,24 +336,31 @@ def render_languages(_config: dict[str, Any], counts: Counter[str] | None) -> st
     for index, (name, value) in enumerate(values):
         color = language_color(name)
         share = value / total
-        seg_w = bar_w if pending else bar_w * share
+        seg_w = bar_w if pending else max(bar_w * share, 0)
         segments.append(
             f'<rect x="{cursor:.2f}" y="{bar_y}" width="{seg_w:.2f}" height="{bar_h}" fill="{color}"/>'
         )
         cursor += seg_w
-        col, row = index % 4, index // 4
-        lx = pad_x + col * 188
-        ly = 98 + row * 36
-        pct = "—" if pending else f"{share * 100:.1f}%"
+        col, row = index % columns, index // columns
+        lx = pad_x + col * col_w
+        ly = 94 + row * 32
+        pct = "—" if pending else format_share(share)
         legend.append(
-            f'<circle cx="{lx + 5}" cy="{ly}" r="4" fill="{color}"/>'
-            f'<text x="{lx + 16}" y="{ly + 4}" class="label">{escape(name)}</text>'
-            f'<text x="{lx + 168}" y="{ly + 4}" class="muted" text-anchor="end">{pct}</text>'
+            f'<circle cx="{lx + 5:.1f}" cy="{ly}" r="4" fill="{color}"/>'
+            f'<text x="{lx + 16:.1f}" y="{ly + 4}" class="label">{escape(name)}</text>'
+            f'<text x="{lx + col_w - 8:.1f}" y="{ly + 4}" class="muted" text-anchor="end">{escape(pct)}</text>'
         )
-    lines = "Updating" if pending else f"{compact_number(total)} lines"
+    if pending or stats is None:
+        summary = "Updating"
+    else:
+        summary = (
+            f"{compact_number(stats.lifetime_lines)} lines"
+            f"  ·  {format_repo_count(stats.repo_count)}"
+            f"  ·  {format_storage(stats.size_kb)}"
+        )
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">
 <title id="title">Languages</title>
-<desc id="desc">Source-line language mix across owned repositories.</desc>
+<desc id="desc">Current source mix by language, with lifetime committed source lines.</desc>
 <style>
   .title {{ font: 600 16px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #e6edf3; }}
   .muted {{ font: 12px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #8b949e; }}
@@ -263,19 +372,19 @@ def render_languages(_config: dict[str, Any], counts: Counter[str] | None) -> st
 <rect width="{width}" height="{height}" rx="6" fill="#0d1117"/>
 <rect x=".5" y=".5" width="{width - 1}" height="{height - 1}" rx="5.5" fill="none" stroke="#30363d"/>
 <text x="{pad_x}" y="34" class="title">Languages</text>
-<text x="{width - pad_x}" y="34" class="muted" text-anchor="end">{escape(lines)}</text>
+<text x="{width - pad_x}" y="34" class="muted" text-anchor="end">{escape(summary)}</text>
 <rect x="{pad_x}" y="{bar_y}" width="{bar_w}" height="{bar_h}" rx="4" fill="#21262d"/>
 <g clip-path="url(#bar)">{''.join(segments)}</g>
 {''.join(legend)}
 </svg>'''
 
 
-def write_assets(config: dict[str, Any], counts: Counter[str] | None) -> None:
+def write_assets(stats: ProfileStats | None) -> None:
     ASSETS.mkdir(parents=True, exist_ok=True)
-    (ASSETS / "languages.svg").write_text(render_languages(config, counts) + "\n", encoding="utf-8")
+    (ASSETS / "languages.svg").write_text(render_languages(stats) + "\n", encoding="utf-8")
 
 
-def collect(config: dict[str, Any]) -> Counter[str]:
+def collect(config: dict[str, Any]) -> ProfileStats:
     username = config["username"]
     profile_token = os.environ.get("PROFILE_TOKEN", "").strip()
     token = profile_token or os.environ.get("GITHUB_TOKEN", "").strip()
@@ -290,7 +399,7 @@ def collect(config: dict[str, Any]) -> Counter[str]:
         and not (config.get("exclude_archived", True) and repo.get("archived"))
         and not repo.get("disabled")
     ]
-    return clone_and_count(indexed, profile_token, config.get("exclude_globs", []))
+    return analyze_repositories(indexed, profile_token, config.get("exclude_globs", []))
 
 
 def main() -> None:
@@ -298,8 +407,8 @@ def main() -> None:
     parser.add_argument("--placeholder", action="store_true", help="Generate clean placeholder assets without API access")
     args = parser.parse_args()
     config = load_config()
-    counts = None if args.placeholder else collect(config)
-    write_assets(config, counts)
+    stats = None if args.placeholder else collect(config)
+    write_assets(stats)
     print("Generated: " + ", ".join(str(path.relative_to(ROOT)) for path in sorted(ASSETS.glob("*.svg"))))
 
 

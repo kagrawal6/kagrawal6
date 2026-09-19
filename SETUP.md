@@ -81,7 +81,10 @@ Commit the change and rerun the workflow.
 
 ## What the numbers mean
 
-- **Language shares**: current nonblank, non-comment source-line shares across indexed owned repositories after the exclusions in `profile-config.json`.
+- **Lines**: source-file insertions across the commit history of indexed owned repositories. Merge commits are skipped so lines are not counted twice.
+- **Repos**: indexed owned repositories after fork, archive, and name exclusions.
+- **Storage**: GitHub-reported git size of those repositories, shown the same way GitHub displays account storage.
+- **Language shares**: nonblank, non-comment source lines in the current tree only, after the exclusions in `profile-config.json`. Generated netlists and oversized HTML/CSS dumps are omitted from the split.
 
 ## Run it locally
 

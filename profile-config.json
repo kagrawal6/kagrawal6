@@ -25,6 +25,19 @@
     "**/*.lock",
     "**/package-lock.json",
     "**/yarn.lock",
-    "**/pnpm-lock.yaml"
+    "**/pnpm-lock.yaml",
+    "**/.Xil/**",
+    "**/vivado*/**",
+    "**/ip_user_files/**",
+    "**/sim_build/**",
+    "**/__pycache__/**",
+    "**/.venv/**",
+    "**/venv/**",
+    "**/target/**",
+    "**/*.vcd",
+    "**/*_netlist.v",
+    "**/*_netlist.sv",
+    "**/htmlcov/**",
+    "**/docs/html/**"
   ]
 }
