@@ -5,9 +5,8 @@ No third-party Python packages are required. Public mode uses GitHub's REST API
 plus clones. Supplying PROFILE_TOKEN allows owned private repositories to be
 included when the token has access to them.
 
-The headline count is source lines ever committed (insertions across
-history, excluding merge commits). The percentage split is the current
-tree only.
+The headline count and the percentage split both come from the current
+tree: nonblank, non-comment source lines after exclusions.
 """
 
 from __future__ import annotations
@@ -92,7 +91,6 @@ MARKUP_LANGUAGES = {"HTML", "CSS", "SCSS"}
 @dataclass
 class ProfileStats:
     current: Counter[str]
-    lifetime_lines: int
     repo_count: int
     size_kb: int
 
@@ -206,13 +204,6 @@ def source_line_count(path: Path, language: str) -> int:
     return count
 
 
-def normalize_numstat_path(path: str) -> str:
-    cleaned = path.strip().strip("{}")
-    if " => " in cleaned:
-        cleaned = cleaned.split(" => ", 1)[1]
-    return cleaned.replace("\\", "/")
-
-
 def count_current_tree(repo: Path, exclude_globs: list[str]) -> Counter[str]:
     tracked = subprocess.run(
         ["git", "-C", str(repo), "ls-files", "-z"],
@@ -228,25 +219,6 @@ def count_current_tree(repo: Path, exclude_globs: list[str]) -> Counter[str]:
     return counts
 
 
-def count_lifetime_insertions(repo: Path, exclude_globs: list[str]) -> int:
-    result = subprocess.run(
-        ["git", "-C", str(repo), "log", "--all", "--no-merges", "--numstat", "--pretty=tformat:"],
-        capture_output=True, check=True, timeout=180,
-    )
-    total = 0
-    for line in result.stdout.decode("utf-8", errors="replace").splitlines():
-        if not line.strip():
-            continue
-        parts = line.split("\t", 2)
-        if len(parts) != 3 or parts[0] == "-":
-            continue
-        path = normalize_numstat_path(parts[2])
-        if is_excluded(path, exclude_globs) or language_for_path(path) is None:
-            continue
-        total += int(parts[0])
-    return total
-
-
 def git_env(token: str) -> dict[str, str]:
     env = os.environ.copy()
     env["GIT_TERMINAL_PROMPT"] = "0"
@@ -257,7 +229,6 @@ def git_env(token: str) -> dict[str, str]:
 
 def analyze_repositories(repos: list[dict[str, Any]], token: str, exclude_globs: list[str]) -> ProfileStats:
     current: Counter[str] = Counter()
-    lifetime_lines = 0
     basic = base64.b64encode(f"x-access-token:{token}".encode()).decode() if token else ""
     with tempfile.TemporaryDirectory(prefix="profile-stats-") as temp:
         temp_root = Path(temp)
@@ -266,19 +237,16 @@ def analyze_repositories(repos: list[dict[str, Any]], token: str, exclude_globs:
             command = ["git"]
             if token:
                 command += ["-c", f"http.extraHeader=AUTHORIZATION: basic {basic}"]
-            command += ["clone", "--quiet", "--single-branch", repo["clone_url"], str(destination)]
-            result = subprocess.run(command, capture_output=True, text=True, timeout=300, env=git_env(token))
+            command += ["clone", "--depth=1", "--quiet", repo["clone_url"], str(destination)]
+            result = subprocess.run(command, capture_output=True, text=True, timeout=180, env=git_env(token))
             if result.returncode != 0:
                 print(f"warning: could not clone {repo['full_name']}; skipping LOC analysis")
                 continue
             head = count_current_tree(destination, exclude_globs)
-            committed = count_lifetime_insertions(destination, exclude_globs)
             current.update(head)
-            lifetime_lines += committed
-            print(f"{repo['full_name']}: {sum(head.values()):,} current lines, {committed:,} committed")
+            print(f"{repo['full_name']}: {sum(head.values()):,} source lines")
     return ProfileStats(
         current=current,
-        lifetime_lines=lifetime_lines,
         repo_count=len(repos),
         size_kb=sum(int(repo.get("size") or 0) for repo in repos),
     )
@@ -365,13 +333,13 @@ def render_languages(stats: ProfileStats | None) -> str:
         summary = "Updating"
     else:
         summary = (
-            f"{compact_number(stats.lifetime_lines)} lines"
+            f"{compact_number(sum(stats.current.values()))} lines"
             f"  ·  {format_repo_count(stats.repo_count)}"
             f"  ·  {format_storage(stats.size_kb)}"
         )
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">
 <title id="title">Languages</title>
-<desc id="desc">Current source mix by language, with lifetime committed source lines.</desc>
+<desc id="desc">Current source-line mix by language across owned repositories.</desc>
 <style>
   .title {{ font: 600 16px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #e6edf3; }}
   .muted {{ font: 12px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #8b949e; }}

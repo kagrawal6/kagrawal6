@@ -1,7 +1,7 @@
-Hi, I'm Kushal Agrawal, a first-year Computer Engineering master's student at Carnegie Mellon. I work at the intersection of computer architecture and systems software, with a focus on efficient platforms for AI and high-performance computing.
+Hi, I'm Kushal, a Computer Engineering student at Carnegie Mellon University. I work at the intersection of computer architecture and systems software. I am driven by the idea of building the underlying tools and infrastructure that allow future technologies to scale.
 
 <p align="center">
-  <img src="./assets/languages.svg?v=20260919075510" width="100%" alt="Current language mix and lifetime committed source lines" />
+  <img src="./assets/languages.svg?v=20260919080022" width="100%" alt="Current language mix across owned repositories" />
 </p>
 
 <p align="center">

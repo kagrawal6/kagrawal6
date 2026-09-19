@@ -81,10 +81,9 @@ Commit the change and rerun the workflow.
 
 ## What the numbers mean
 
-- **Lines**: source-file insertions across the commit history of indexed owned repositories. Merge commits are skipped so lines are not counted twice.
+- **Lines** and **language shares**: nonblank, non-comment source lines in the current tree of indexed owned repositories, after the exclusions in `profile-config.json`. Generated netlists and oversized HTML/CSS dumps are omitted.
 - **Repos**: indexed owned repositories after fork, archive, and name exclusions, including private repositories when the token can read them.
 - **Storage**: GitHub-reported git size of those repositories, including private repositories.
-- **Language shares**: nonblank, non-comment source lines in the current tree only, after the exclusions in `profile-config.json`. Generated netlists and oversized HTML/CSS dumps are omitted from the split.
 
 ## Run it locally
 
