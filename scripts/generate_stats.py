@@ -142,6 +142,15 @@ def fetch_repositories(username: str, token: str, include_private: bool) -> list
     return repos
 
 
+def authenticated_login(token: str) -> str | None:
+    try:
+        user = request_json(f"{API}/user", token)
+    except RuntimeError:
+        return None
+    login = user.get("login")
+    return login.lower() if isinstance(login, str) else None
+
+
 def is_excluded(path: str, patterns: list[str]) -> bool:
     normalized = path.replace("\\", "/")
     padded = f"/{normalized}"
@@ -404,10 +413,13 @@ def write_assets(stats: ProfileStats | None) -> None:
 def collect(config: dict[str, Any]) -> ProfileStats:
     username = config["username"]
     profile_token = os.environ.get("PROFILE_TOKEN", "").strip()
-    token = profile_token or os.environ.get("GITHUB_TOKEN", "").strip()
+    github_token = os.environ.get("GITHUB_TOKEN", "").strip()
+    token = profile_token or github_token
     if not token:
         raise RuntimeError("Set GITHUB_TOKEN or PROFILE_TOKEN before generating live statistics.")
-    repos = fetch_repositories(username, token, include_private=bool(profile_token))
+    include_private = authenticated_login(token) == username.lower()
+    clone_token = token if include_private else ""
+    repos = fetch_repositories(username, token, include_private=include_private)
     excluded_names = set(config.get("exclude_repositories", []))
     indexed = [
         repo for repo in repos
@@ -416,7 +428,9 @@ def collect(config: dict[str, Any]) -> ProfileStats:
         and not (config.get("exclude_archived", True) and repo.get("archived"))
         and not repo.get("disabled")
     ]
-    return analyze_repositories(indexed, profile_token, config.get("exclude_globs", []))
+    private_count = sum(1 for repo in indexed if repo.get("private"))
+    print(f"Indexed {len(indexed)} repositories ({private_count} private)")
+    return analyze_repositories(indexed, clone_token, config.get("exclude_globs", []))
 
 
 def main() -> None:
