@@ -1,7 +1,7 @@
 Hi, I'm Kushal, a graduate computer engineering student at Carnegie Mellon University. I work at the intersection of computer architecture and systems. I am driven to build the underlying tools and infrastructure that allow future technologies to scale.
 
 <p align="center">
-  <img src="./assets/languages.svg?v=20260923044539" width="100%" alt="Current language mix across owned repositories" />
+  <img src="./assets/languages.svg?v=20260923170026" width="100%" alt="Current language mix across owned repositories" />
 </p>
 
 <p align="center">
